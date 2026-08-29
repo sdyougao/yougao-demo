@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优高系列 AI 虚实融合 Demo</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .page-transition { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        #xr-canvas { width: 100%; height: 500px; background: #0a0a1a; border-radius: 12px; }
+        .digital-human { width: 100%; height: 400px; background: linear-gradient(135deg, #1e3a8a, #0f172a); border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .human-avatar { font-size: 120px; animation: breathe 3s ease-in-out infinite; }
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        .speaking .human-avatar { animation: speak 0.3s ease-in-out infinite; }
+        @keyframes speak { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .chat-box { height: 400px; overflow-y: auto; }
+        .msg-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px; }
+        .msg-user { background: #2563eb; color: white; margin-left: auto; }
+        .msg-ai { background: #f1f5f9; color: #1e293b; }
+        .product-card { transition: all 0.3s ease; cursor: pointer; }
+        .product-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div id="app">
+        <!-- 顶部导航 -->
+        <nav class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2 cursor-pointer" @click="currentPage = 'home'">
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">优</div>
+                    <span class="font-bold text-lg">优高系列 Demo</span>
+                </div>
+                <div class="flex gap-6 text-sm">
+                    <span @click="currentPage = 'home'" :class="{'text-blue-600 font-medium': currentPage==='home'}" class="cursor-pointer hover:text-blue-600">首页</span>
+                    <span @click="currentPage = 'smart'" :class="{'text-blue-600 font-medium': currentPage==='smart'}" class="cursor-pointer hover:text-blue-600">优高智能</span>
+                    <span @click="currentPage = 'human'" :class="{'text-blue-600 font-medium': currentPage==='human'}" class="cursor-pointer hover:text-blue-600">优高智人</span>
+                    <span @click="currentPage = 'xr'" :class="{'text-blue-600 font-medium': currentPage==='xr'}" class="cursor-pointer hover:text-blue-600">优高智境</span>
+                    <span @click="currentPage = 'demo'" :class="{'text-blue-600 font-medium': currentPage==='demo'}" class="cursor-pointer hover:text-blue-600 font-medium">联动演示</span>
+                </div>
+            </div>
+        </nav>
+
+        <transition name="fade" mode="out-in">
+        <!-- 首页 -->
+        <div v-if="currentPage === 'home'" class="max-w-7xl mx-auto px-6 py-12">
+            <div class="text-center mb-16">
+                <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">智脑 · 智人 · 智境</h1>
+                <p class="text-gray-500 text-lg">三位一体 AI 虚实融合解决方案</p>
+                <p class="text-gray-400 mt-2">AI-Agent底座 · 人格化数字交互 · AI+XR空间计算</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-8 mb-16">
+                <div class="product-card bg-white rounded-2xl p-8 shadow-sm border border-gray-100" @click="currentPage = 'smart'">
+                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-2xl mb-4">🧠</div>
+                    <h3 class="text-xl font-bold mb-2">优高智能</h3>
+                    <p class="text-gray-500 text-sm mb-4">AI-Agent 产业智能底座</p>
+                    <p class="text-gray-400 text-xs">知识库 RAG · 智能体编排 · 业务自动化</p>
+                </div>
+                <div class="product-card bg-white rounded-2xl p-8 shadow-sm border border-gray-100" @click="currentPage = 'human'">
+                    <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mb-4">👤</div>
+                    <h3 class="text-xl font-bold mb-2">优高智人</h3>
+                    <p class="text-gray-500 text-sm mb-4">人格化数字交互平台</p>
+                    <p class="text-gray-400 text-xs">数字人形象 · 语音驱动 · 情感交互</p>
+                </div>
+                <div class="product-card bg-white rounded-2xl p-8 shadow-sm border border-gray-100" @click="currentPage = 'xr'">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center text-2xl mb-4">🌐</div>
+                    <h3 class="text-xl font-bold mb-2">优高智境</h3>
+                    <p class="text-gray-500 text-sm mb-4">AI+XR 虚实融合空间</p>
+                    <p class="text-gray-400 text-xs">三维场景 · 沉浸式交互 · 多端适配</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-8">
+                <h3 class="text-lg font-bold mb-6 text-center">整体技术架构</h3>
+                <div class="flex flex-col items-center gap-4">
+                    <div class="w-full max-w-2xl bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 text-center border border-blue-100">
+                        <span class="font-medium">应用层</span>
+                        <div class="flex justify-center gap-8 mt-2 text-sm">
+                            <span>优高智能</span><span>优高智人</span><span>优高智境</span>
+                        </div>
+                    </div>
+                    <div class="text-gray-300">↓ 统一API网关</div>
+                    <div class="w-full max-w-2xl bg-gray-50 rounded-xl p-4 text-center border border-gray-200">
+                        <span class="font-medium">通用能力中台</span>
+                        <div class="flex justify-center gap-6 mt-2 text-sm text-gray-500">
+                            <span>大模型适配</span><span>RAG引擎</span><span>多模态引擎</span><span>权限中心</span>
+                        </div>
+                    </div>
+                    <div class="text-gray-300">↓</div>
+                    <div class="w-full max-w-2xl bg-gray-50 rounded-xl p-4 text-center border border-gray-200">
+                        <span class="font-medium">基础设施层</span>
+                        <div class="flex justify-center gap-6 mt-2 text-sm text-gray-500">
+                            <span>计算资源</span><span>容器编排</span><span>存储</span><span>安全防护</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button @click="currentPage = 'demo'" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-medium hover:shadow-lg transition-shadow">
+                    → 进入完整联动演示
+                </button>
+            </div>
+        </div>
+
+        <!-- 优高智能 Demo -->
+        <div v-if="currentPage === 'smart'" class="max-w-5xl mx-auto px-6 py-8">
+            <h2 class="text-2xl font-bold mb-6">优高智能 · AI-Agent 知识库 Demo</h2>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="flex">
+                    <div class="w-1/3 border-r border-gray-100 p-4 bg-gray-50">
+                        <h4 class="font-medium mb-3 text-sm text-gray-500">知识库文档</h4>
+                        <div class="space-y-2">
+                            <div v-for="doc in docs" :key="doc.id" class="p-3 bg-white rounded-lg text-sm border border-gray-100 hover:border-blue-200 cursor-pointer">
+                                <div class="font-medium">{{ doc.title }}</div>
+                                <div class="text-gray-400 text-xs mt-1">{{ doc.source }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-2/3 flex flex-col">
+                        <div class="chat-box p-4 flex-1">
+                            <div class="msg-bubble msg-ai">
+                                你好！我是优高智能助手，基于企业知识库回答问题。你可以问我关于产品、技术、方案的问题。
+                            </div>
+                            <div v-for="msg in chatMessages" :key="msg.id" class="msg-bubble" :class="msg.role === 'user' ? 'msg-user' : 'msg-ai'">
+                                {{ msg.content }}
+                                <div v-if="msg.source" class="text-xs mt-2 opacity-60">引用来源：{{ msg.source }}</div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-gray-100 flex gap-2">
+                            <input v-model="chatInput" @keyup.enter="sendChat" type="text" placeholder="输入问题，例如：优高系列包含哪几款产品？" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400">
+                            <button @click="sendChat" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">发送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 优高智人 Demo -->
+        <div v-if="currentPage === 'human'" class="max-w-5xl mx-auto px-6 py-8">
+            <h2 class="text-2xl font-bold mb-6">优高智人 · 数字人交互 Demo</h2>
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <div class="digital-human" :class="{'speaking': isSpeaking}">
+                        <div class="human-avatar">🧑‍💼</div>
+                        <div class="absolute bottom-4 text-white text-sm opacity-70">
+                            {{ isSpeaking ? '正在讲解...' : '待机中' }}
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button v-for="avatar in avatars" :key="avatar.id" @click="currentAvatar = avatar.id" :class="{'bg-blue-100 border-blue-300': currentAvatar === avatar.id}" class="flex-1 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50">
+                            {{ avatar.name }}
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <h4 class="font-medium mb-4">输入文字驱动数字人讲解</h4>
+                    <textarea v-model="humanText" rows="5" class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 mb-4" placeholder="输入要讲解的内容..."></textarea>
+                    <button @click="speakText" class="w-full py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700">
+                        开始讲解
+                    </button>
+                    <div class="mt-6 space-y-3">
+                        <p class="text-sm text-gray-500">快速示例：</p>
+                        <button v-for="sample in sampleTexts" :key="sample" @click="humanText = sample" class="block w-full text-left p-2 text-sm bg-gray-50 rounded-lg hover:bg-gray-100">
+                            {{ sample.substring(0, 30) }}...
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 优高智境 Demo -->
+        <div v-if="currentPage === 'xr'" class="max-w-6xl mx-auto px-6 py-8">
+            <h2 class="text-2xl font-bold mb-6">优高智境 · AI+XR 虚拟展厅 Demo</h2>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <div id="xr-canvas" ref="xrCanvas"></div>
+                <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                    <span>操作提示：鼠标拖拽旋转视角，滚轮缩放，点击展品查看详情</span>
+                    <div class="flex gap-2">
+                        <button @click="resetCamera" class="px-3 py-1 border border-gray-200 rounded">重置视角</button>
+                    </div>
+                </div>
+            </div>
+            <div v-if="selectedExhibit" class="mt-4 bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <h4 class="font-medium">{{ selectedExhibit.name }}</h4>
+                <p class="text-sm text-gray-500 mt-1">{{ selectedExhibit.desc }}</p>
+            </div>
+        </div>
+
+        <!-- 联动演示 -->
+        <div v-if="currentPage === 'demo'" class="max-w-6xl mx-auto px-6 py-8">
+            <h2 class="text-2xl font-bold mb-2">三位一体联动演示</h2>
+            <p class="text-gray-500 mb-6 text-sm">点击展厅中的展品 → 数字人讲解 → 可继续追问AI</p>
+            
+            <div class="grid grid-cols-3 gap-4">
+                <!-- XR展厅区域 -->
+                <div class="col-span-2 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <h4 class="font-medium mb-3 text-sm">优高智境 · 虚拟展厅</h4>
+                    <div id="demo-xr-canvas" ref="demoXrCanvas" style="width:100%; height:420px; background:#0a0a1a; border-radius:12px;"></div>
+                </div>
+                
+                <!-- 数字人+问答区域 -->
+                <div class="flex flex-col gap-4">
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <h4 class="font-medium mb-3 text-sm">优高智人 · 虚拟讲解员</h4>
+                        <div class="digital-human" :class="{'speaking': demoSpeaking}" style="height:180px;">
+                            <div class="human-avatar text-6xl">👩‍💼</div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2 text-center">{{ demoSpeaking ? '正在为您讲解...' : '点击展品开始讲解' }}</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex-1 flex flex-col">
+                        <h4 class="font-medium mb-3 text-sm">优高智能 · 对话</h4>
+                        <div class="flex-1 overflow-y-auto text-sm space-y-2" style="max-height:200px;">
+                            <div class="text-gray-400 text-xs">点击左侧展厅展品开始体验</div>
+                            <div v-for="msg in demoChat" :key="msg.id" class="msg-bubble" :class="msg.role === 'user' ? 'msg-user' : 'msg-ai'" style="padding:6px 10px; font-size:12px;">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <input v-model="demoInput" @keyup.enter="sendDemoChat" type="text" placeholder="追问..." class="flex-1 px-3 py-2 text-xs border border-gray-200 rounded focus:outline-none">
+                            <button @click="sendDemoChat" class="px-3 py-2 bg-blue-600 text-white rounded text-xs">发送</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </transition>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const currentPage = ref('home');
+                const chatInput = ref('');
+                const chatMessages = ref([]);
+                const humanText = ref('');
+                const isSpeaking = ref(false);
+                const currentAvatar = ref(1);
+                const selectedExhibit = ref(null);
+                const demoSpeaking = ref(false);
+                const demoChat = ref([]);
+                const demoInput = ref('');
+                const xrCanvas = ref(null);
+                const demoXrCanvas = ref(null);
+
+                const docs = ref([
+                    { id: 1, title: '优高系列产品白皮书', source: '产品部 · 2024' },
+                    { id: 2, title: '技术架构说明文档', source: '技术部 · 2024' },
+                    { id: 3, title: '政企展厅解决方案', source: '解决方案部 · 2024' },
+                    { id: 4, title: '工业实训场景案例', source: '行业交付部 · 2024' }
+                ]);
+
+                const avatars = [
+                    { id: 1, name: '商务专员' },
+                    { id: 2, name: '技术专家' },
+                    { id: 3, name: '虚拟导游' }
+                ];
+
+                const sampleTexts = [
+                    '优高系列包含三款产品：优高智能、优高智人、优高智境，形成AI大脑到虚拟角色再到沉浸式空间的完整闭环。',
+                    '优高智能是产业级AI底座，提供知识库RAG、智能体编排、业务自动化等核心能力。',
+                    '优高智境主打AI+XR空间计算，支持三维场景搭建、多终端访问、虚实融合交互。'
+                ];
+
+                // 知识库模拟问答
+                const knowledgeBase = {
+                    '优高系列包含哪几款产品': {
+                        answer: '优高系列包含三款产品：优高智能、优高智人、优高智境。优高智能是AI-Agent产业智能底座，优高智人是人格化数字交互平台，优高智境是AI+XR虚实融合空间平台。',
+                        source: '优高系列产品白皮书 · 第3页'
+                    },
+                    '技术架构': {
+                        answer: '整体采用分层解耦架构，自上而下分为应用层、统一网关层、通用能力中台层、基础设施层。共用底层技术底座，三款应用原生互通。',
+                        source: '技术架构说明文档 · 第7页'
+                    },
+                    '默认': {
+                        answer: '这是一个Demo演示版本，真实环境中将基于企业知识库通过RAG引擎检索并生成答案。您可以询问"优高系列包含哪几款产品"、"技术架构"等问题。',
+                        source: '系统默认回复'
+                    }
+                };
+				
+				const sendChat = async () => {
+					if (!chatInput.value.trim()) return;
+					chatMessages.value.push({ id: Date.now(), role: 'user', content: chatInput.value });
+					const question = chatInput.value;
+					chatInput.value = '';
+
+					try {
+						const res = await fetch('/api/chat', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ question })
+						});
+						const data = await res.json();
+						chatMessages.value.push({ 
+							id: Date.now() + 1, 
+							role: 'ai', 
+							content: data.answer,
+							source: data.source
+						});
+					} catch (e) {
+						chatMessages.value.push({ 
+							id: Date.now() + 1, 
+							role: 'ai', 
+							content: '接口调用失败，请检查后端服务。',
+							source: '系统错误'
+						});
+					}
+				};
+
+                const speakText = () => {
+                    if (!humanText.value.trim()) return;
+                    isSpeaking.value = true;
+                    
+                    // 模拟语音播报（真实环境调用TTS+数字人驱动）
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(humanText.value);
+                        utterance.lang = 'zh-CN';
+                        utterance.rate = 1;
+                        utterance.onend = () => { isSpeaking.value = false; };
+                        speechSynthesis.speak(utterance);
+                    } else {
+                        setTimeout(() => { isSpeaking.value = false; }, 3000);
+                    }
+                };
+
+                // Three.js 展厅初始化
+                let scene, camera, renderer, exhibits = [];
+                
+                const initXRScene = (canvasId, isDemo = false) => {
+                    const canvas = document.getElementById(canvasId);
+                    if (!canvas) return;
+
+                    scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0x0a0a1a);
+                    
+                    const width = canvas.clientWidth;
+                    const height = canvas.clientHeight;
+                    
+                    camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+                    camera.position.set(0, 2, 8);
+                    
+                    renderer = new THREE.WebGLRenderer({ antialias: true });
+                    renderer.setSize(width, height);
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    canvas.appendChild(renderer.domElement);
+                    
+                    // 灯光
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                    scene.add(ambientLight);
+                    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+                    pointLight.position.set(5, 5, 5);
+                    scene.add(pointLight);
+                    
+                    // 地面
+                    const floorGeo = new THREE.PlaneGeometry(20, 12);
+                    const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+                    const floor = new THREE.Mesh(floorGeo, floorMat);
+                    floor.rotation.x = -Math.PI / 2;
+                    floor.position.y = -1.5;
+                    scene.add(floor);
+                    
+                    // 展品
+                    const exhibitData = [
+                        { name: '优高智能', desc: 'AI-Agent产业智能底座', color: 0x3b82f6, pos: [-4, 0, 0] },
+                        { name: '优高智人', desc: '人格化数字交互平台', color: 0x8b5cf6, pos: [0, 0, 0] },
+                        { name: '优高智境', desc: 'AI+XR虚实融合空间', color: 0x06b6d4, pos: [4, 0, 0] }
+                    ];
+                    
+                    exhibits = [];
+                    exhibitData.forEach((item, i) => {
+                        const geo = new THREE.BoxGeometry(1.5, 2, 0.8);
+                        const mat = new THREE.MeshStandardMaterial({ color: item.color, metalness: 0.3, roughness: 0.5 });
+                        const mesh = new THREE.Mesh(geo, mat);
+                        mesh.position.set(...item.pos);
+                        mesh.userData = item;
+                        scene.add(mesh);
+                        exhibits.push(mesh);
+                        
+                        // 底座
+                        const baseGeo = new THREE.CylinderGeometry(1, 1.1, 0.2, 32);
+                        const baseMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+                        const base = new THREE.Mesh(baseGeo, baseMat);
+                        base.position.set(item.pos[0], -1.4, item.pos[2]);
+                        scene.add(base);
+                    });
+                    
+                    // 简单轨道控制
+                    let isDragging = false;
+                    let previousMouse = { x: 0, y: 0 };
+                    let rotationY = 0;
+                    
+                    canvas.addEventListener('mousedown', (e) => {
+                        isDragging = true;
+                        previousMouse = { x: e.clientX, y: e.clientY };
+                    });
+                    
+                    canvas.addEventListener('mousemove', (e) => {
+                        if (!isDragging) return;
+                        const deltaX = e.clientX - previousMouse.x;
+                        rotationY += deltaX * 0.01;
+                        previousMouse = { x: e.clientX, y: e.clientY };
+                    });
+                    
+                    canvas.addEventListener('mouseup', () => { isDragging = false; });
+                    canvas.addEventListener('wheel', (e) => {
+                        e.preventDefault();
+                        camera.position.z += e.deltaY * 0.01;
+                        camera.position.z = Math.max(4, Math.min(15, camera.position.z));
+                    });
+                    
+                    // 点击检测
+                    const raycaster = new THREE.Raycaster();
+                    const mouse = new THREE.Vector2();
+                    
+                    canvas.addEventListener('click', (e) => {
+                        const rect = canvas.getBoundingClientRect();
+                        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                        
+                        raycaster.setFromCamera(mouse, camera);
+                        const intersects = raycaster.intersectObjects(exhibits);
+                        
+                        if (intersects.length > 0) {
+                            const item = intersects[0].object.userData;
+                            if (isDemo) {
+                                triggerDemoExhibit(item);
+                            } else {
+                                selectedExhibit.value = item;
+                            }
+                        }
+                    });
+                    
+                    const animate = () => {
+                        requestAnimationFrame(animate);
+                        
+                        // 旋转展台
+                        exhibits.forEach((ex, i) => {
+                            ex.rotation.y += 0.005;
+                        });
+                        
+                        camera.position.x = Math.sin(rotationY) * 8;
+                        camera.lookAt(0, 0, 0);
+                        
+                        renderer.render(scene, camera);
+                    };
+                    animate();
+                };
+
+                const resetCamera = () => {
+                    // 简单重置
+                };
+
+                // 联动演示逻辑
+                const triggerDemoExhibit = (item) => {
+                    demoChat.value = [];
+                    demoSpeaking.value = true;
+                    
+                    const intro = `欢迎了解${item.name}。${item.desc}。您可以继续提问，我会为您详细解答。`;
+                    
+                    demoChat.value.push({
+                        id: Date.now(),
+                        role: 'ai',
+                        content: intro
+                    });
+                    
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(intro);
+                        utterance.lang = 'zh-CN';
+                        utterance.onend = () => { demoSpeaking.value = false; };
+                        speechSynthesis.speak(utterance);
+                    } else {
+                        setTimeout(() => { demoSpeaking.value = false; }, 3000);
+                    }
+                };
+				
+				const sendDemoChat = async () => {
+					if (!demoInput.value.trim()) return;
+					demoChat.value.push({ id: Date.now(), role: 'user', content: demoInput.value });
+					const question = demoInput.value;
+					demoInput.value = '';
+
+					demoSpeaking.value = true;
+					try {
+						const res = await fetch('/api/chat', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ question, scene: 'demo' })
+						});
+						const data = await res.json();
+						demoChat.value.push({ id: Date.now() + 1, role: 'ai', content: data.answer });
+						
+						if ('speechSynthesis' in window) {
+							const utterance = new SpeechSynthesisUtterance(data.answer);
+							utterance.lang = 'zh-CN';
+							utterance.onend = () => { demoSpeaking.value = false; };
+							speechSynthesis.speak(utterance);
+						} else {
+							demoSpeaking.value = false;
+						}
+					} catch (e) {
+						demoChat.value.push({ id: Date.now() + 1, role: 'ai', content: '服务暂不可用' });
+						demoSpeaking.value = false;
+					}
+				};
+
+                onMounted(() => {
+                    nextTick(() => {
+                        // 监听页面切换，延迟初始化3D场景
+                    });
+                });
+
+                // 页面切换后初始化3D
+                const watchPage = () => {
+                    nextTick(() => {
+                        if (currentPage.value === 'xr') {
+                            setTimeout(() => initXRScene('xr-canvas'), 100);
+                        } else if (currentPage.value === 'demo') {
+                            setTimeout(() => initXRScene('demo-xr-canvas', true), 100);
+                        }
+                    });
+                };
+
+                // 简单监听
+                setInterval(() => {
+                    if ((currentPage.value === 'xr' || currentPage.value === 'demo') && !scene) {
+                        watchPage();
+                    }
+                }, 300);
+
+                return {
+                    currentPage,
+                    chatInput,
+                    chatMessages,
+                    humanText,
+                    isSpeaking,
+                    currentAvatar,
+                    avatars,
+                    sampleTexts,
+                    selectedExhibit,
+                    demoSpeaking,
+                    demoChat,
+                    demoInput,
+                    xrCanvas,
+                    demoXrCanvas,
+                    docs,
+                    sendChat,
+                    speakText,
+                    resetCamera,
+                    sendDemoChat
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
