@@ -488,30 +488,37 @@
                 sendQuestion();
             };
 
-            const sendQuestion = () => {
-                if (!chatInput.value.trim()) return;
-                chatMessages.value.push({ id: Date.now(), role: 'user', content: chatInput.value });
-                const question = chatInput.value;
-                chatInput.value = '';
-                isSearching.value = true;
+            const sendQuestion = async () => {
+				if (!chatInput.value.trim()) return;
+				chatMessages.value.push({ id: Date.now(), role: 'user', content: chatInput.value });
+				const question = chatInput.value;
+				chatInput.value = '';
+				isSearching.value = true;
 
-                setTimeout(() => {
-                    isSearching.value = false;
-                    let result = knowledgeBase['default'];
-                    for (let key in knowledgeBase) {
-                        if (question.includes(key)) {
-                            result = knowledgeBase[key];
-                            break;
-                        }
-                    }
-                    chatMessages.value.push({
-                        id: Date.now() + 1,
-                        role: 'assistant',
-                        content: result.answer,
-                        source: result.source
-                    });
-                }, 1200);
-            };
+				try {
+					const res = await fetch('/api/chat', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ question, scene: 'demo' })
+					});
+					const data = await res.json();
+					isSearching.value = false;
+					chatMessages.value.push({
+						id: Date.now() + 1,
+						role: 'assistant',
+						content: data.answer,
+						source: data.source
+					});
+				} catch (e) {
+					isSearching.value = false;
+					chatMessages.value.push({
+						id: Date.now() + 1,
+						role: 'assistant',
+						content: '服务暂时不可用，请稍后重试。',
+						source: '系统错误'
+					});
+				}
+			};
 
             // Agent演示
             const agentRunning = ref(false);
