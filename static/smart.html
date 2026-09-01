@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优高智能 - AI-Agent产业智能底座 | 官方演示站</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .typing { overflow: hidden; border-right: 2px solid #2563eb; animation: typing 0.8s steps(40, end); }
+        @keyframes typing { from { width: 0; } to { width: 100%; } }
+        .step-active { background: #eff6ff; border-color: #2563eb; color: #1d4ed8; }
+        .step-done { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+        .code-block { background: #0f172a; color: #e2e8f0; font-family: monospace; font-size: 12px; padding: 12px; border-radius: 8px; overflow-x: auto; }
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 500; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+<div id="app">
+    <!-- 顶部导航 -->
+    <nav class="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-sm">优</div>
+                <div>
+                    <div class="font-bold text-lg">优高智能</div>
+                    <div class="text-xs text-gray-400 -mt-0.5">AI-Agent产业智能底座</div>
+                </div>
+            </div>
+            <div class="hidden md:flex gap-8 text-sm text-gray-600">
+                <a href="#knowledge" class="hover:text-blue-600 transition">知识库</a>
+                <a href="#agent" class="hover:text-blue-600 transition">智能体</a>
+                <a href="#api" class="hover:text-blue-600 transition">开放API</a>
+                <a href="#scenes" class="hover:text-blue-600 transition">应用场景</a>
+                <a href="#advantage" class="hover:text-blue-600 transition">产品优势</a>
+            </div>
+            <button class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-blue-700 transition">
+                咨询合作
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero首屏 -->
+    <section class="py-20 bg-gradient-to-b from-white to-blue-50/30">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <div class="inline-block px-4 py-1 bg-blue-100 text-blue-700 rounded-full text-xs mb-6">
+                产业级AI-Agent底座 · 原生打通数字人与XR空间
+            </div>
+            <h1 class="text-5xl font-bold mb-6 leading-tight">
+                让业务知识<span class="text-blue-600">可检索、可推理、可执行</span>
+            </h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto mb-10">
+                基于RAG检索增强与多智能体编排技术，构建企业专属AI大脑，沉淀知识资产，自动化业务流程，为数字人、XR空间提供统一AI能力支撑。
+            </p>
+            <div class="flex gap-4 justify-center">
+                <a href="#knowledge" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                    立即体验
+                </a>
+                <a href="#api" class="bg-white border border-gray-200 px-8 py-3 rounded-lg font-medium hover:border-blue-300 transition">
+                    查看API文档
+                </a>
+            </div>
+            <div class="grid grid-cols-3 gap-8 mt-16 max-w-3xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600">95%+</div>
+                    <div class="text-sm text-gray-500 mt-1">知识库问答准确率</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600">70%</div>
+                    <div class="text-sm text-gray-500 mt-1">重复性工作效率提升</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600">1套</div>
+                    <div class="text-sm text-gray-500 mt-1">底座支撑全场景应用</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 知识库RAG演示 -->
+    <section id="knowledge" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">RAG 智能知识库</h2>
+                <p class="text-gray-500">基于企业文档构建语义知识库，精准检索、准确回答、来源可追溯</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- 知识库切换 -->
+                <div class="border-b border-gray-100 px-6 py-3 flex gap-6 text-sm">
+                    <div v-for="kb in knowledgeBases" :key="kb.id"
+                         @click="currentKb = kb.id"
+                         :class="currentKb === kb.id ? 'tab-active' : 'text-gray-500 cursor-pointer hover:text-gray-700'"
+                         class="pb-2">
+                        {{ kb.name }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-5">
+                    <!-- 文档列表 -->
+                    <div class="border-r border-gray-100 p-4 bg-gray-50">
+                        <div class="text-xs text-gray-400 mb-3">知识库文档</div>
+                        <div class="space-y-2">
+                            <div v-for="doc in currentDocs" :key="doc.id"
+                                 class="p-3 bg-white rounded-lg text-sm border border-gray-100">
+                                <div class="font-medium text-gray-700 text-xs">{{ doc.title }}</div>
+                                <div class="text-gray-400 text-xs mt-1">{{ doc.pages }}页 · {{ doc.size }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 问答区域 -->
+                    <div class="col-span-4 flex flex-col" style="height: 500px;">
+                        <div class="flex-1 p-6 overflow-y-auto space-y-4">
+                            <div class="flex justify-start">
+                                <div class="max-w-[80%] bg-gray-100 rounded-xl px-4 py-3 text-sm">
+                                    你好，我是优高智能助手，基于当前知识库回答问题。你可以试试问我：<br>
+                                    <span class="text-blue-600 cursor-pointer" v-for="q in quickQuestions" :key="q" @click="askQuestion(q)">
+                                        {{ q }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div v-for="msg in chatMessages" :key="msg.id" class="fade-in">
+                                <div v-if="msg.role === 'user'" class="flex justify-end">
+                                    <div class="max-w-[80%] bg-blue-600 text-white rounded-xl px-4 py-3 text-sm">
+                                        {{ msg.content }}
+                                    </div>
+                                </div>
+                                <div v-else class="flex justify-start">
+                                    <div class="max-w-[80%] bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm shadow-sm">
+                                        {{ msg.content }}
+                                        <div v-if="msg.source" class="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-50">
+                                            引用来源：{{ msg.source }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="isSearching" class="flex justify-start">
+                                <div class="bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm shadow-sm">
+                                    <span class="text-gray-400">正在检索知识库...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-gray-100">
+                            <div class="flex gap-2">
+                                <input v-model="chatInput" @keyup.enter="sendQuestion"
+                                       type="text" placeholder="输入你的问题..."
+                                       class="flex-1 px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400">
+                                <button @click="sendQuestion"
+                                        class="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition">
+                                    提问
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agent智能体演示 -->
+    <section id="agent" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">Agent 智能体编排</h2>
+                <p class="text-gray-500">可视化编排业务流程，多智能体协同执行，自动完成复杂任务</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h3 class="font-bold text-lg">合同审查智能体</h3>
+                        <p class="text-sm text-gray-500 mt-1">自动解析合同文本、比对标准条款、识别风险点、生成审查报告</p>
+                    </div>
+                    <button @click="runAgent" :disabled="agentRunning"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
+                        {{ agentRunning ? '执行中...' : '运行演示' }}
+                    </button>
+                </div>
+
+                <!-- 流程节点 -->
+                <div class="flex items-center justify-between mb-8">
+                    <div v-for="(step, index) in agentSteps" :key="step.id"
+                         :class="step.status"
+                         class="flex-1 mx-2 p-4 rounded-lg border-2 border-gray-200 text-center transition-all duration-500">
+                        <div class="text-2xl mb-2">{{ step.icon }}</div>
+                        <div class="font-medium text-sm">{{ step.name }}</div>
+                        <div class="text-xs mt-1 opacity-70">{{ step.desc }}</div>
+                    </div>
+                </div>
+
+                <!-- 执行结果 -->
+                <div v-if="agentResult" class="fade-in bg-gray-50 rounded-xl p-6 border border-gray-100">
+                    <h4 class="font-medium mb-3 text-sm">审查结果</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2">
+                            <span class="text-red-500">⚠</span>
+                            <div>
+                                <div class="font-medium">高风险：违约责任条款不对等</div>
+                                <div class="text-gray-500 text-xs mt-0.5">甲方违约赔偿上限为合同金额5%，乙方无上限，建议修改为对等比例</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-yellow-500">⚠</span>
+                            <div>
+                                <div class="font-medium">中风险：保密期限约定不明确</div>
+                                <div class="text-gray-500 text-xs mt-0.5">未明确保密信息范围及保密期限，建议补充约定</div>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-green-500">✓</span>
+                            <div>
+                                <div class="font-medium">合规项：付款条款符合标准模板</div>
+                                <div class="text-gray-500 text-xs mt-0.5">付款节点、比例、账期均符合企业标准合同条款</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API开放接口 -->
+    <section id="api" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">开放 API 接口</h2>
+                <p class="text-gray-500">标准化RESTful接口，快速对接上层应用与第三方系统</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <!-- 接口列表 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="font-bold mb-4">接口列表</h3>
+                    <div class="space-y-2">
+                        <div v-for="api in apiList" :key="api.id"
+                             @click="currentApi = api.id"
+                             :class="currentApi === api.id ? 'border-blue-300 bg-blue-50' : 'border-gray-100 hover:border-gray-200'"
+                             class="p-4 rounded-lg border cursor-pointer transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700">{{ api.method }}</span>
+                                <span class="font-medium text-sm">{{ api.name }}</span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-2 font-mono">{{ api.path }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 调试面板 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                    <h3 class="font-bold mb-4">在线调试</h3>
+                    <div class="mb-4">
+                        <label class="text-xs text-gray-500 block mb-2">请求参数</label>
+                        <textarea v-model="apiRequestBody" rows="4"
+                                  class="w-full p-3 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:border-blue-400"></textarea>
+                    </div>
+                    <button @click="callApi" :disabled="apiLoading"
+                            class="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition disabled:opacity-50">
+                        {{ apiLoading ? '请求中...' : '发送请求' }}
+                    </button>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-2">响应结果</label>
+                        <div class="code-block flex-1">
+                            {{ apiResponse || '// 点击发送请求查看响应' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术架构 -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">整体技术架构</h2>
+                <p class="text-gray-500">分层解耦设计，高可用、可扩展、信创适配</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+                        <div class="text-sm font-medium text-blue-700 mb-2">应用层</div>
+                        <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">优高智能 管理后台</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">优高智人 数字交互</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">优高智境 XR空间</div>
+                        </div>
+                    </div>
+                    <div class="text-center text-gray-300 text-sm">↓ 统一API网关 · 认证鉴权 · 流量管控</div>
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                        <div class="text-sm font-medium text-gray-600 mb-2">能力中台层</div>
+                        <div class="grid grid-cols-4 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">RAG 知识库引擎</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">Agent 编排引擎</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">多模态引擎</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">权限审计中心</div>
+                        </div>
+                    </div>
+                    <div class="text-center text-gray-300 text-sm">↓ 大模型适配 · 数据存储 · 任务调度</div>
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                        <div class="text-sm font-medium text-gray-600 mb-2">基础设施层</div>
+                        <div class="grid grid-cols-4 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">计算资源</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">容器编排</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">向量/关系数据库</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">安全防护体系</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 应用场景 -->
+    <section id="scenes" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">典型应用场景</h2>
+                <p class="text-gray-500">覆盖政企、制造、文旅、园区多行业数字化场景</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <div v-for="scene in scenes" :key="scene.id"
+                     class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mb-4">
+                        {{ scene.icon }}
+                    </div>
+                    <h3 class="font-bold text-lg mb-2">{{ scene.name }}</h3>
+                    <p class="text-sm text-gray-500 mb-4">{{ scene.desc }}</p>
+                    <div class="text-xs text-blue-600">查看方案 →</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 产品优势 -->
+    <section id="advantage" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">为什么选择优高智能</h2>
+                <p class="text-gray-500">原生一体化架构，降低集成成本，提升业务价值</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">原生一体化，零集成成本</h3>
+                    <p class="text-sm text-gray-500">与优高智人、优高智境同源研发，能力原生打通，无需多厂商联调，交付周期缩短50%以上。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">可拆可合，灵活部署</h3>
+                    <p class="text-sm text-gray-500">支持独立部署优高智能作为企业AI中台，也可组合整套方案，渐进式投入，风险可控。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">产业级知识治理</h3>
+                    <p class="text-sm text-gray-500">面向政企场景强化权限分级、审计日志、多租户隔离，满足信创与数据安全要求。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">从展示到业务的价值跃迁</h3>
+                    <p class="text-sm text-gray-500">不止于内容问答，更能执行业务流程，驱动业务转化，让AI能力直接产生业务价值。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部CTA -->
+    <section class="py-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-4">即刻体验优高智能</h2>
+            <p class="opacity-80 mb-8">获取完整产品方案，预约专属演示，探讨您的业务场景</p>
+            <div class="flex gap-4 justify-center">
+                <button class="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition">
+                    预约演示
+                </button>
+                <button class="border border-white/30 px-8 py-3 rounded-lg font-medium hover:bg-white/10 transition">
+                    下载产品白皮书
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-gray-400 py-12 text-sm">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-white font-bold text-lg mb-4">优高智能</div>
+                    <p class="text-xs opacity-60">AI-Agent产业智能底座，赋能企业数字化升级</p>
+                </div>
+                <div>
+                    <div class="text-white mb-4">产品</div>
+                    <div class="space-y-2 text-xs">
+                        <div>优高智能</div>
+                        <div>优高智人</div>
+                        <div>优高智境</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-white mb-4">方案</div>
+                    <div class="space-y-2 text-xs">
+                        <div>政企展厅</div>
+                        <div>工业实训</div>
+                        <div>数字园区</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-white mb-4">联系我们</div>
+                    <div class="space-y-2 text-xs">
+                        <div>商务合作：business@yougao.com</div>
+                        <div>技术支持：support@yougao.com</div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-6 text-xs opacity-60 text-center">
+                © 2026 优高智能 版权所有
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+        setup() {
+            // 知识库数据
+            const currentKb = ref(1);
+            const knowledgeBases = [
+                { id: 1, name: '企业产品库' },
+                { id: 2, name: '行业方案库' },
+                { id: 3, name: '政策法规库' }
+            ];
+
+            const docsData = {
+                1: [
+                    { id: 1, title: '优高系列产品白皮书V2.0', pages: 36, size: '2.4MB' },
+                    { id: 2, title: '技术架构说明文档', pages: 24, size: '1.8MB' },
+                    { id: 3, title: 'API接口手册', pages: 18, size: '1.2MB' }
+                ],
+                2: [
+                    { id: 1, title: '政企展厅解决方案', pages: 28, size: '3.1MB' },
+                    { id: 2, title: '工业实训场景方案', pages: 32, size: '2.7MB' },
+                    { id: 3, title: '数字园区建设指南', pages: 40, size: '3.5MB' }
+                ],
+                3: [
+                    { id: 1, title: '数字经济促进条例', pages: 16, size: '890KB' },
+                    { id: 2, title: '数据安全合规规范', pages: 22, size: '1.5MB' },
+                    { id: 3, title: '信创适配标准目录', pages: 30, size: '2.1MB' }
+                ]
+            };
+
+            const currentDocs = computed(() => docsData[currentKb.value] || []);
+            const quickQuestions = [
+                '优高智能的核心能力是什么？',
+                '支持哪些部署模式？',
+                '和竞品相比有什么优势？'
+            ];
+
+            const chatInput = ref('');
+            const chatMessages = ref([]);
+            const isSearching = ref(false);
+
+            const knowledgeBase = {
+                '优高智能的核心能力': {
+                    answer: '优高智能核心能力包括：1. RAG智能知识库，支持多格式文档解析、语义检索、精准问答与来源追溯；2. Agent智能体编排，可视化配置业务流程，多智能体协同执行；3. 开放API网关，标准化输出AI能力，支撑上层应用；4. 多租户权限管理，满足企业级组织架构与安全审计需求。',
+                    source: '优高系列产品白皮书V2.0 · 第12页'
+                },
+                '支持哪些部署模式': {
+                    answer: '优高智能支持三种部署模式：1. SaaS公有云模式，按需订阅，快速启用；2. 私有化部署模式，部署到客户自有服务器，数据物理隔离；3. 混合云模式，核心数据本地部署，非核心能力调用云端资源。同时全面适配信创环境，支持国产CPU、操作系统、数据库与大模型。',
+                    source: '技术架构说明文档 · 第18页'
+                },
+                '和竞品相比有什么优势': {
+                    answer: '相比通用Agent平台，优高智能核心优势在于：1. 原生一体化，与优高智人、优高智境打通，无需集成；2. 产业级设计，强化权限、审计、多租户能力；3. 可独立可组合，灵活匹配不同项目需求；4. 聚焦B端业务场景，提供行业知识库模板与落地服务。',
+                    source: '优高系列产品白皮书V2.0 · 第24页'
+                },
+                'default': {
+                    answer: '感谢您的提问。演示版本已预置核心产品相关知识，您可以询问产品能力、部署模式、技术架构、竞争优势等问题。正式版可接入企业专属知识库，定制业务场景。',
+                    source: '系统默认回复'
+                }
+            };
+
+            const askQuestion = (q) => {
+                chatInput.value = q;
+                sendQuestion();
+            };
+
+            const sendQuestion = () => {
+                if (!chatInput.value.trim()) return;
+                chatMessages.value.push({ id: Date.now(), role: 'user', content: chatInput.value });
+                const question = chatInput.value;
+                chatInput.value = '';
+                isSearching.value = true;
+
+                setTimeout(() => {
+                    isSearching.value = false;
+                    let result = knowledgeBase['default'];
+                    for (let key in knowledgeBase) {
+                        if (question.includes(key)) {
+                            result = knowledgeBase[key];
+                            break;
+                        }
+                    }
+                    chatMessages.value.push({
+                        id: Date.now() + 1,
+                        role: 'assistant',
+                        content: result.answer,
+                        source: result.source
+                    });
+                }, 1200);
+            };
+
+            // Agent演示
+            const agentRunning = ref(false);
+            const agentResult = ref(null);
+            const agentSteps = ref([
+                { id: 1, name: '文本解析', desc: '提取合同要素', icon: '📄', status: '' },
+                { id: 2, name: '条款比对', desc: '匹配标准模板', icon: '🔍', status: '' },
+                { id: 3, name: '风险识别', desc: '检测异常条款', icon: '⚠️', status: '' },
+                { id: 4, name: '生成报告', desc: '输出审查意见', icon: '📊', status: '' }
+            ]);
+
+            const runAgent = () => {
+                if (agentRunning.value) return;
+                agentRunning.value = true;
+                agentResult.value = null;
+                agentSteps.value.forEach(s => s.status = '');
+
+                let index = 0;
+                const runStep = () => {
+                    if (index >= agentSteps.value.length) {
+                        agentRunning.value = false;
+                        agentResult.value = true;
+                        return;
+                    }
+                    agentSteps.value[index].status = 'step-active';
+                    setTimeout(() => {
+                        agentSteps.value[index].status = 'step-done';
+                        index++;
+                        runStep();
+                    }, 800);
+                };
+                runStep();
+            };
+
+            // API演示
+            const currentApi = ref(1);
+            const apiLoading = ref(false);
+            const apiResponse = ref('');
+            const apiList = [
+                { id: 1, name: '知识库问答', method: 'POST', path: '/api/chat' },
+                { id: 2, name: 'Agent任务执行', method: 'POST', path: '/api/agent/run' },
+                { id: 3, name: '知识库列表', method: 'GET', path: '/api/knowledge/list' }
+            ];
+
+            const apiRequestBody = ref(JSON.stringify({
+                "question": "优高智能的核心能力是什么？",
+                "scene": "product"
+            }, null, 2));
+
+            const callApi = () => {
+                apiLoading.value = true;
+                apiResponse.value = '';
+
+                setTimeout(() => {
+                    apiLoading.value = false;
+                    apiResponse.value = JSON.stringify({
+                        "code": 0,
+                        "message": "success",
+                        "data": {
+                            "answer": "优高智能核心能力包括RAG智能知识库、Agent智能体编排、开放API网关、多租户权限管理四大模块。",
+                            "source": "优高系列产品白皮书V2.0 · 第12页",
+                            "timestamp": Math.floor(Date.now() / 1000)
+                        }
+                    }, null, 2);
+                }, 800);
+            };
+
+            // 场景
+            const scenes = [
+                { id: 1, name: '政企智能展厅', icon: '🏛️', desc: '为展厅数字人、XR空间提供业务知识库与智能交互能力，从展示升级为可业务转化。' },
+                { id: 2, name: '工业技能实训', icon: '🏭', desc: '沉淀操作规程与经验知识，结合XR实训场景，实现智能考核与个性化指导。' },
+                { id: 3, name: '数字园区运营', icon: '🏙️', desc: '统一园区数据与知识，驱动数字孪生空间智能交互，提升运营与招商效率。' },
+                { id: 4, name: '企业知识中台', icon: '📚', desc: '沉淀企业全量知识资产，降低培训成本，提升员工工作效率与决策质量。' },
+                { id: 5, name: '智能客服中心', icon: '💬', desc: '构建业务知识库，赋能数字客服，7×24小时精准解答业务问题。' },
+                { id: 6, name: '政策合规审查', icon: '⚖️', desc: '智能比对政策法规条款，自动识别合规风险，提升审查效率与准确性。' }
+            ];
+
+            return {
+                currentKb,
+                knowledgeBases,
+                currentDocs,
+                quickQuestions,
+                chatInput,
+                chatMessages,
+                isSearching,
+                askQuestion,
+                sendQuestion,
+                agentRunning,
+                agentResult,
+                agentSteps,
+                runAgent,
+                currentApi,
+                apiList,
+                apiRequestBody,
+                apiResponse,
+                apiLoading,
+                callApi,
+                scenes
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

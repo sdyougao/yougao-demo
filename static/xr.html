@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优高智境 - AI+XR 虚实融合空间 | 官方演示站</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #xr-canvas {
+            width: 100%;
+            height: 560px;
+            background: linear-gradient(180deg, #081829 0%, #0f2942 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: grab;
+        }
+        #xr-canvas:active { cursor: grabbing; }
+
+        .msg-bubble { max-width: 90%; padding: 8px 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; }
+        .msg-user { background: #06b6d4; color: white; margin-left: auto; }
+        .msg-ai { background: #f0f9fb; color: #0e3b4a; }
+
+        .tab-active { border-bottom: 2px solid #06b6d4; color: #06b6d4; font-weight: 500; }
+        .exhibit-card-active { border-color: #06b6d4; background: #f0f9fb; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+<div id="app">
+    <!-- 顶部导航 -->
+    <nav class="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">优</div>
+                <div>
+                    <div class="font-bold text-lg">优高智境</div>
+                    <div class="text-xs text-gray-400 -mt-0.5">AI+XR 虚实融合空间</div>
+                </div>
+            </div>
+            <div class="hidden md:flex gap-8 text-sm text-gray-600">
+                <a href="#demo" class="hover:text-cyan-600 transition">虚拟展厅</a>
+                <a href="#ability" class="hover:text-cyan-600 transition">核心能力</a>
+                <a href="#architecture" class="hover:text-cyan-600 transition">技术架构</a>
+                <a href="#scenes" class="hover:text-cyan-600 transition">应用场景</a>
+                <a href="#advantage" class="hover:text-cyan-600 transition">产品优势</a>
+            </div>
+            <button class="bg-cyan-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-cyan-700 transition">
+                咨询合作
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero首屏 -->
+    <section class="py-20 bg-gradient-to-b from-white to-cyan-50/30">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <div class="inline-block px-4 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs mb-6">
+                AI 驱动的 XR 空间 · 原生接入数字人与知识库 · 多端沉浸式体验
+            </div>
+            <h1 class="text-5xl font-bold mb-6 leading-tight">
+                让物理空间<span class="text-cyan-600">可计算、可交互、可智能</span>
+            </h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto mb-10">
+                基于 WebXR 与三维渲染技术，构建可编辑、可交互的虚实融合空间，
+                原生接入优高智能业务逻辑与优高智人虚拟角色，打造沉浸式空间交互体验。
+            </p>
+            <div class="flex gap-4 justify-center">
+                <a href="#demo" class="bg-cyan-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-cyan-700 transition shadow-lg shadow-cyan-200">
+                    进入展厅
+                </a>
+                <a href="#scenes" class="bg-white border border-gray-200 px-8 py-3 rounded-lg font-medium hover:border-cyan-300 transition">
+                    查看场景方案
+                </a>
+            </div>
+            <div class="grid grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-cyan-600">0插件</div>
+                    <div class="text-sm text-gray-500 mt-1">浏览器即开即用</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-cyan-600">5端</div>
+                    <div class="text-sm text-gray-500 mt-1">全终端适配覆盖</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-cyan-600">原生</div>
+                    <div class="text-sm text-gray-500 mt-1">打通AI与数字人</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-cyan-600">低代码</div>
+                    <div class="text-sm text-gray-500 mt-1">拖拽式场景搭建</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心交互演示 -->
+    <section id="demo" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">虚拟展厅交互演示</h2>
+                <p class="text-gray-500">鼠标拖拽旋转视角 · 滚轮缩放 · 点击展品触发 AI 讲解</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <!-- 左侧3D展厅 -->
+                <div class="col-span-2">
+                    <div id="xr-canvas" ref="xrCanvas"></div>
+                    <div class="mt-4 flex justify-between items-center text-sm text-gray-500">
+                        <span>💡 操作提示：拖拽旋转视角，滚轮缩放，点击展品查看详情并讲解</span>
+                        <div class="flex gap-2">
+                            <button @click="resetCamera" class="px-3 py-1 border border-gray-200 rounded text-xs hover:border-cyan-300">重置视角</button>
+                            <button @click="autoTour" class="px-3 py-1 border border-gray-200 rounded text-xs hover:border-cyan-300">自动导览</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧信息与对话 -->
+                <div class="space-y-4">
+                    <!-- 展品信息 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                        <h4 class="font-medium text-sm mb-3">展品信息</h4>
+                        <div v-if="selectedExhibit" class="fade-in">
+                            <div class="text-lg font-bold mb-1" :style="{ color: selectedExhibit.color }">
+                                {{ selectedExhibit.name }}
+                            </div>
+                            <p class="text-sm text-gray-500 mb-3">{{ selectedExhibit.desc }}</p>
+                            <div class="text-xs text-gray-400">点击展厅中其他展品切换查看</div>
+                        </div>
+                        <div v-else class="text-sm text-gray-400 py-4 text-center">
+                            点击左侧展厅中的展品开始体验
+                        </div>
+                    </div>
+
+                    <!-- 数字人讲解 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                        <h4 class="font-medium text-sm mb-3">虚拟讲解员</h4>
+                        <div class="h-32 bg-gradient-to-b from-cyan-50 to-white rounded-lg flex items-center justify-center relative">
+                            <div class="text-5xl" :class="{ 'animate-bounce': isSpeaking }">👩‍💼</div>
+                            <div class="absolute bottom-2 text-xs text-gray-400">
+                                {{ isSpeaking ? '正在讲解...' : '等待触发' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 对话问答 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col" style="height: 260px;">
+                        <div class="p-4 border-b border-gray-100">
+                            <div class="text-sm font-medium">AI 对话</div>
+                            <div class="text-xs text-gray-400 mt-0.5">基于空间知识库实时问答</div>
+                        </div>
+                        <div class="flex-1 p-3 overflow-y-auto space-y-2">
+                            <div class="msg-bubble msg-ai">
+                                点击展厅展品，我会为您讲解对应产品。
+                            </div>
+                            <div v-for="msg in chatMessages" :key="msg.id" class="fade-in">
+                                <div v-if="msg.role === 'user'" class="msg-bubble msg-user">
+                                    {{ msg.content }}
+                                </div>
+                                <div v-else class="msg-bubble msg-ai">
+                                    {{ msg.content }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t border-gray-100">
+                            <div class="flex gap-2">
+                                <input v-model="chatInput" @keyup.enter="sendChat"
+                                       type="text" placeholder="继续追问..."
+                                       class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-cyan-400">
+                                <button @click="sendChat"
+                                        class="px-3 py-2 bg-cyan-600 text-white rounded-lg text-xs hover:bg-cyan-700 transition">
+                                    发送
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心能力 -->
+    <section id="ability" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">四大核心能力</h2>
+                <p class="text-gray-500">不止是3D场景，更是可运行AI业务的虚实空间载体</p>
+            </div>
+
+            <div class="grid grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-2xl mb-4">🏗️</div>
+                    <h3 class="font-bold text-lg mb-2">场景编辑器</h3>
+                    <p class="text-sm text-gray-500">拖拽式低代码三维场景搭建，内置行业模板与素材库，快速构建数字空间。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-2xl mb-4">🤖</div>
+                    <h3 class="font-bold text-lg mb-2">空间AI事件</h3>
+                    <p class="text-sm text-gray-500">空间交互事件触发AI能力，点击、靠近、动作均可调用知识库与Agent执行业务逻辑。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-2xl mb-4">👤</div>
+                    <h3 class="font-bold text-lg mb-2">数字人嵌入</h3>
+                    <p class="text-sm text-gray-500">原生接入优高智人数字人，空间内自由移动、讲解、交互，形象人格一致。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-cyan-100 rounded-xl flex items-center justify-center text-2xl mb-4">📱</div>
+                    <h3 class="font-bold text-lg mb-2">多终端适配</h3>
+                    <p class="text-sm text-gray-500">支持PC、大屏、VR/AR、移动端，WebXR标准，无需安装应用即开即用。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术架构 -->
+    <section id="architecture" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">整体技术架构</h2>
+                <p class="text-gray-500">分层渲染架构，原生打通优高全产品体系</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl p-5 border border-cyan-100">
+                        <div class="text-sm font-medium text-cyan-700 mb-2">终端接入层</div>
+                        <div class="grid grid-cols-5 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">PC 网页</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">展厅大屏</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">VR 头显</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">AR 眼镜</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">移动H5</div>
+                        </div>
+                    </div>
+                    <div class="text-center text-gray-300 text-sm">↓ WebXR / 视频流 / 参数流</div>
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                        <div class="text-sm font-medium text-gray-600 mb-2">XR 渲染引擎层</div>
+                        <div class="grid grid-cols-4 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">三维场景渲染</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">物理交互引擎</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">空间事件系统</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">资源加载调度</div>
+                        </div>
+                    </div>
+                    <div class="text-center text-gray-300 text-sm">↓ 原生对接优高产品体系</div>
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                        <div class="text-sm font-medium text-gray-600 mb-2">能力支撑层</div>
+                        <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">优高智能
+                                <span class="block text-xs text-gray-400 mt-0.5">知识库 / Agent</span>
+                            </div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">优高智人
+                                <span class="block text-xs text-gray-400 mt-0.5">数字人 / 语音</span>
+                            </div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">统一数据中台
+                                <span class="block text-xs text-gray-400 mt-0.5">用户 / 权限 / 日志</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 应用场景 -->
+    <section id="scenes" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">典型应用场景</h2>
+                <p class="text-gray-500">覆盖多行业沉浸式空间需求</p>
+            </div>
+
+            <div class="grid grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mb-4">🏛️</div>
+                    <h3 class="font-bold text-lg mb-2">政企虚拟展厅</h3>
+                    <p class="text-sm text-gray-500 mb-4">三维数字展厅，虚拟人智能讲解，展品互动问答，7×24小时在线开放。</p>
+                    <div class="text-xs text-cyan-600">查看方案 →</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl mb-4">🏭</div>
+                    <h3 class="font-bold text-lg mb-2">工业技能实训</h3>
+                    <p class="text-sm text-gray-500 mb-4">1:1还原工业场景，模拟操作演练，AI实时纠错考核，零风险零损耗。</p>
+                    <div class="text-xs text-cyan-600">查看方案 →</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl mb-4">🏙️</div>
+                    <h3 class="font-bold text-lg mb-2">数字孪生园区</h3>
+                    <p class="text-sm text-gray-500 mb-4">园区三维孪生，数据实时驱动，空间交互招商，沉浸式运营管理。</p>
+                    <div class="text-xs text-cyan-600">查看方案 →</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-2xl mb-4">🏞️</div>
+                    <h3 class="font-bold text-lg mb-2">文旅虚拟导览</h3>
+                    <p class="text-sm text-gray-500 mb-4">历史场景还原，数字人导览讲解，AR增强现实，突破时空限制。</p>
+                    <div class="text-xs text-cyan-600">查看方案 →</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 产品优势 -->
+    <section id="advantage" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">为什么选择优高智境</h2>
+                <p class="text-gray-500">区别于传统3D展厅，从"可看"升级为"可交互、有智能、能业务"</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">原生AI驱动，不是拼接</h3>
+                    <p class="text-sm text-gray-500">传统XR展厅与AI、数字人互相割裂，需要第三方集成。优高智境原生打通优高智能与优高智人，空间事件直接触发业务逻辑，开箱即用。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">不止浏览，更能业务交互</h3>
+                    <p class="text-sm text-gray-500">不只是3D视觉展示，更能实现问答咨询、预约留资、业务办理、实训考核等业务动作，让空间直接产生业务价值。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">Web轻量化，零门槛访问</h3>
+                    <p class="text-sm text-gray-500">基于WebGL/WebXR标准，浏览器即开即用，无需下载插件与客户端，大幅降低用户访问门槛。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">低代码快速搭建</h3>
+                    <p class="text-sm text-gray-500">内置行业场景模板与素材库，拖拽式编辑，快速交付，相比传统定制开发周期缩短70%以上。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部CTA -->
+    <section class="py-20 bg-gradient-to-r from-cyan-600 to-teal-600 text-white">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-4">打造您的沉浸式数字空间</h2>
+            <p class="opacity-80 mb-8">获取完整场景方案，预约专属演示，探索XR落地场景</p>
+            <div class="flex gap-4 justify-center">
+                <button class="bg-white text-cyan-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition">
+                    预约演示
+                </button>
+                <button class="border border-white/30 px-8 py-3 rounded-lg font-medium hover:bg-white/10 transition">
+                    下载产品白皮书
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-gray-400 py-12 text-sm">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-white font-bold text-lg mb-4">优高智境</div>
+                    <p class="text-xs opacity-60">AI+XR虚实融合空间，重新定义沉浸式交互体验</p>
+                </div>
+                <div>
+                    <div class="text-white mb-4">产品矩阵</div>
+                    <div class="space-y-2 text-xs">
+                        <div>优高智能</div>
+                        <div>优高智人</div>
+                        <div>优高智境</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-white mb-4">解决方案</div>
+                    <div class="space-y-2 text-xs">
+                        <div>智能展厅</div>
+                        <div>工业实训</div>
+                        <div>数字园区</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-white mb-4">联系我们</div>
+                    <div class="space-y-2 text-xs">
+                        <div>商务合作：business@yougao.com</div>
+                        <div>技术支持：support@yougao.com</div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-6 text-xs opacity-60 text-center">
+                © 2026 优高智能 版权所有
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script>
+    const { createApp, ref, onMounted, nextTick } = Vue;
+
+    createApp({
+        setup() {
+            const xrCanvas = ref(null);
+            const selectedExhibit = ref(null);
+            const isSpeaking = ref(false);
+            const chatInput = ref('');
+            const chatMessages = ref([]);
+            
+            let scene, camera, renderer, exhibits = [];
+            let isAutoTour = false;
+
+            // 展品数据
+            const exhibitData = [
+                { 
+                    id: 'smart', 
+                    name: '优高智能', 
+                    desc: 'AI-Agent产业智能底座，提供知识库与智能体编排能力',
+                    color: '#2563eb',
+                    position: [-4, 0, 0],
+                    question: '介绍一下优高智能'
+                },
+                { 
+                    id: 'human', 
+                    name: '优高智人', 
+                    desc: '人格化数字交互平台，高拟真虚拟角色实时对话',
+                    color: '#8b5cf6',
+                    position: [0, 0, 0],
+                    question: '介绍一下优高智人'
+                },
+                { 
+                    id: 'xr', 
+                    name: '优高智境', 
+                    desc: 'AI+XR虚实融合空间，打造沉浸式三维交互场景',
+                    color: '#06b6d4',
+                    position: [4, 0, 0],
+                    question: '介绍一下优高智境'
+                }
+            ];
+
+            // 初始化3D展厅
+            const initXRScene = () => {
+                const container = document.getElementById('xr-canvas');
+                if (!container) return;
+
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                // 场景
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x081829);
+                scene.fog = new THREE.Fog(0x081829, 10, 25);
+
+                // 相机
+                camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100);
+                camera.position.set(0, 2, 10);
+
+                // 渲染器
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(width, height);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.shadowMap.enabled = true;
+                container.appendChild(renderer.domElement);
+
+                // 灯光
+                const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambient);
+
+                const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+                mainLight.position.set(5, 8, 5);
+                mainLight.castShadow = true;
+                scene.add(mainLight);
+
+                // 地面
+                const floorGeo = new THREE.PlaneGeometry(30, 15);
+                const floorMat = new THREE.MeshStandardMaterial({ 
+                    color: 0x12334a,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
+                const floor = new THREE.Mesh(floorGeo, floorMat);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = -1.5;
+                floor.receiveShadow = true;
+                scene.add(floor);
+
+                // 地面网格线
+                const grid = new THREE.GridHelper(30, 30, 0x1a4a6b, 0x0f2d42);
+                grid.position.y = -1.49;
+                scene.add(grid);
+
+                // 创建展品
+                exhibits = [];
+                exhibitData.forEach((item, i) => {
+                    // 展台底座
+                    const baseGeo = new THREE.CylinderGeometry(1.1, 1.3, 0.3, 48);
+                    const baseMat = new THREE.MeshStandardMaterial({ 
+                        color: 0x1a3a55,
+                        metalness: 0.5,
+                        roughness: 0.5
+                    });
+                    const base = new THREE.Mesh(baseGeo, baseMat);
+                    base.position.set(item.position[0], -1.35, item.position[2]);
+                    base.receiveShadow = true;
+                    base.castShadow = true;
+                    scene.add(base);
+
+                    // 展品主体
+                    const geo = new THREE.BoxGeometry(1.4, 2, 0.9);
+                    const mat = new THREE.MeshStandardMaterial({ 
+                        color: new THREE.Color(item.color),
+                        metalness: 0.3,
+                        roughness: 0.4,
+                        emissive: new THREE.Color(item.color),
+                        emissiveIntensity: 0.15
+                    });
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.position.set(item.position[0], 0, item.position[2]);
+                    mesh.castShadow = true;
+                    mesh.userData = item;
+                    scene.add(mesh);
+                    exhibits.push(mesh);
+
+                    // 顶部发光
+                    const topGeo = new THREE.BoxGeometry(1.4, 0.1, 0.9);
+                    const topMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(item.color) });
+                    const top = new THREE.Mesh(topGeo, topMat);
+                    top.position.set(item.position[0], 1.05, item.position[2]);
+                    scene.add(top);
+                });
+
+                // 轨道控制
+                let isDragging = false;
+                let prevMouse = { x: 0, y: 0 };
+                let rotY = 0;
+                let targetRotY = 0;
+
+                container.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    isAutoTour = false;
+                    prevMouse = { x: e.clientX, y: e.clientY };
+                });
+
+                container.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const dx = e.clientX - prevMouse.x;
+                    targetRotY += dx * 0.008;
+                    prevMouse = { x: e.clientX, y: e.clientY };
+                });
+
+                container.addEventListener('mouseup', () => isDragging = false);
+                container.addEventListener('mouseleave', () => isDragging = false);
+
+                // 滚轮缩放
+                container.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    camera.position.z += e.deltaY * 0.01;
+                    camera.position.z = Math.max(5, Math.min(18, camera.position.z));
+                }, { passive: false });
+
+                // 点击检测
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+
+                container.addEventListener('click', (e) => {
+                    const rect = container.getBoundingClientRect();
+                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObjects(exhibits);
+
+                    if (intersects.length > 0) {
+                        const item = intersects[0].object.userData;
+                        selectExhibit(item);
+                    }
+                });
+
+                // 动画循环
+                const animate = () => {
+                    requestAnimationFrame(animate);
+
+                    // 平滑旋转
+                    rotY += (targetRotY - rotY) * 0.08;
+
+                    // 自动导览
+                    if (isAutoTour) {
+                        targetRotY += 0.003;
+                    }
+
+                    camera.position.x = Math.sin(rotY) * camera.position.z;
+                    camera.lookAt(0, 0, 0);
+
+                    // 展品自转
+                    exhibits.forEach((ex, i) => {
+                        ex.rotation.y += 0.006;
+                    });
+
+                    renderer.render(scene, camera);
+                };
+                animate();
+
+                // 窗口自适应
+                window.addEventListener('resize', () => {
+                    const w = container.clientWidth;
+                    const h = container.clientHeight;
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                });
+            };
+
+            // 选中展品
+            const selectExhibit = (item) => {
+                selectedExhibit.value = item;
+                
+                // 调用知识库讲解
+                explainExhibit(item.question);
+            };
+
+            // 展品讲解
+            const explainExhibit = async (question) => {
+                isSpeaking.value = true;
+                chatMessages.value.push({ id: Date.now(), role: 'user', content: question });
+
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question, scene: 'xr' })
+                    });
+                    const data = await res.json();
+                    
+                    chatMessages.value.push({
+                        id: Date.now() + 1,
+                        role: 'ai',
+                        content: data.answer
+                    });
+
+                    // 语音播报
+                    if ('speechSynthesis' in window) {
+                        speechSynthesis.cancel();
+                        const u = new SpeechSynthesisUtterance(data.answer);
+                        u.lang = 'zh-CN';
+                        u.rate = 1.0;
+                        u.onend = () => { isSpeaking.value = false; };
+                        speechSynthesis.speak(u);
+                    } else {
+                        setTimeout(() => isSpeaking.value = false, 3000);
+                    }
+
+                } catch (e) {
+                    const fallback = '这是展品的演示讲解内容，接入后端服务后将返回真实知识库讲解。';
+                    chatMessages.value.push({ id: Date.now() + 1, role: 'ai', content: fallback });
+                    setTimeout(() => isSpeaking.value = false, 2000);
+                }
+            };
+
+            // 发送对话
+            const sendChat = async () => {
+                if (!chatInput.value.trim()) return;
+                const question = chatInput.value;
+                chatMessages.value.push({ id: Date.now(), role: 'user', content: question });
+                chatInput.value = '';
+                isSpeaking.value = true;
+
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question, scene: 'xr' })
+                    });
+                    const data = await res.json();
+                    
+                    chatMessages.value.push({
+                        id: Date.now() + 1,
+                        role: 'ai',
+                        content: data.answer
+                    });
+
+                    if ('speechSynthesis' in window) {
+                        speechSynthesis.cancel();
+                        const u = new SpeechSynthesisUtterance(data.answer);
+                        u.lang = 'zh-CN';
+                        u.onend = () => { isSpeaking.value = false; };
+                        speechSynthesis.speak(u);
+                    } else {
+                        isSpeaking.value = false;
+                    }
+
+                } catch (e) {
+                    chatMessages.value.push({ id: Date.now() + 1, role: 'ai', content: '服务暂时不可用' });
+                    isSpeaking.value = false;
+                }
+            };
+
+            // 重置视角
+            const resetCamera = () => {
+                isAutoTour = false;
+                camera.position.z = 10;
+                targetRotY = 0;
+            };
+
+            // 自动导览
+            const autoTour = () => {
+                isAutoTour = !isAutoTour;
+            };
+
+            onMounted(() => {
+                nextTick(() => {
+                    setTimeout(() => initXRScene(), 100);
+                });
+            });
+
+            return {
+                xrCanvas,
+                selectedExhibit,
+                isSpeaking,
+                chatInput,
+                chatMessages,
+                selectExhibit,
+                sendChat,
+                resetCamera,
+                autoTour
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>

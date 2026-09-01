@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优高智人 - 人格化数字交互平台 | 官方演示站</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 数字人核心动画 */
+        .digital-human-container {
+            position: relative;
+            width: 100%;
+            height: 520px;
+            background: linear-gradient(180deg, #f3efff 0%, #e9e3ff 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .human-figure {
+            position: relative;
+            transform-origin: center bottom;
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.015) translateY(-2px); }
+        }
+
+        .speaking .human-figure {
+            animation: speak-body 0.4s ease-in-out infinite;
+        }
+
+        @keyframes speak-body {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-1px) rotate(0.5deg); }
+        }
+
+        /* 简化数字人头像 */
+        .human-head {
+            width: 120px;
+            height: 140px;
+            background: linear-gradient(180deg, #ffe4d0 0%, #ffd4b8 100%);
+            border-radius: 60px 60px 55px 55px;
+            position: relative;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+        }
+
+        /* 眼睛 */
+        .human-eye {
+            position: absolute;
+            top: 55px;
+            width: 14px;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            transition: height 0.2s;
+        }
+        .human-eye.left { left: 30px; }
+        .human-eye.right { right: 30px; }
+
+        .speaking .human-eye {
+            height: 8px;
+        }
+
+        /* 嘴巴 - 核心口型动画 */
+        .human-mouth {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 4px;
+            background: #d87a6b;
+            border-radius: 2px;
+            transition: all 0.1s;
+        }
+
+        .speaking .human-mouth {
+            height: 12px;
+            border-radius: 6px;
+            animation: mouth-move 0.15s ease-in-out infinite alternate;
+        }
+
+        @keyframes mouth-move {
+            0% { height: 6px; width: 18px; }
+            100% { height: 14px; width: 22px; }
+        }
+
+        /* 身体 */
+        .human-body {
+            width: 160px;
+            height: 180px;
+            background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+            border-radius: 80px 80px 20px 20px;
+            margin-top: -10px;
+            position: relative;
+        }
+
+        /* 不同角色配色 */
+        .role-business .human-body { background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%); }
+        .role-tech .human-body { background: linear-gradient(180deg, #0891b2 0%, #0e7490 100%); }
+        .role-guide .human-body { background: linear-gradient(180deg, #16a34a 0%, #15803d 100%); }
+
+        .msg-bubble { max-width: 85%; padding: 10px 14px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; }
+        .msg-user { background: #8b5cf6; color: white; margin-left: auto; }
+        .msg-ai { background: #f5f3ff; color: #1e1b4b; }
+
+        .tab-active { border-bottom: 2px solid #8b5cf6; color: #8b5cf6; font-weight: 500; }
+        .role-card-active { border-color: #8b5cf6; background: #f5f3ff; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+<div id="app">
+    <!-- 顶部导航 -->
+    <nav class="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg flex items-center justify-center text-white font-bold text-sm">优</div>
+                <div>
+                    <div class="font-bold text-lg">优高智人</div>
+                    <div class="text-xs text-gray-400 -mt-0.5">人格化数字交互平台</div>
+                </div>
+            </div>
+            <div class="hidden md:flex gap-8 text-sm text-gray-600">
+                <a href="#demo" class="hover:text-purple-600 transition">实时交互</a>
+                <a href="#ability" class="hover:text-purple-600 transition">核心能力</a>
+                <a href="#architecture" class="hover:text-purple-600 transition">技术架构</a>
+                <a href="#scenes" class="hover:text-purple-600 transition">应用场景</a>
+                <a href="#advantage" class="hover:text-purple-600 transition">产品优势</a>
+            </div>
+            <button class="bg-purple-600 text-white px-5 py-2 rounded-lg text-sm hover:bg-purple-700 transition">
+                咨询合作
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero首屏 -->
+    <section class="py-20 bg-gradient-to-b from-white to-purple-50/30">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <div class="inline-block px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-xs mb-6">
+                带业务心智的数字人 · 原生对接AI底座 · 可嵌入XR空间
+            </div>
+            <h1 class="text-5xl font-bold mb-6 leading-tight">
+                让AI能力<span class="text-purple-600">可看见、可对话、有温度</span>
+            </h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto mb-10">
+                高拟真数字人交互平台，支持自定义形象、音色、人格，原生对接优高智能知识库，
+                既可独立部署作为虚拟员工，也可无缝嵌入XR三维空间，打造拟人化交互体验。
+            </p>
+            <div class="flex gap-4 justify-center">
+                <a href="#demo" class="bg-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-purple-700 transition shadow-lg shadow-purple-200">
+                    立即体验
+                </a>
+                <a href="#scenes" class="bg-white border border-gray-200 px-8 py-3 rounded-lg font-medium hover:border-purple-300 transition">
+                    查看场景方案
+                </a>
+            </div>
+            <div class="grid grid-cols-4 gap-8 mt-16 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-purple-600">90%+</div>
+                    <div class="text-sm text-gray-500 mt-1">唇形同步准确率</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-purple-600"><800ms</div>
+                    <div class="text-sm text-gray-500 mt-1">端到端交互时延</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-purple-600">4套</div>
+                    <div class="text-sm text-gray-500 mt-1">预置行业角色</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-purple-600">5端</div>
+                    <div class="text-sm text-gray-500 mt-1">终端全覆盖</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心交互演示 -->
+    <section id="demo" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">实时数字人交互演示</h2>
+                <p class="text-gray-500">选择角色，输入问题，体验数字人实时语音对话与知识库应答</p>
+            </div>
+
+            <div class="grid grid-cols-4 gap-6">
+                <!-- 左侧角色与设置 -->
+                <div class="space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                        <h4 class="font-medium text-sm mb-4">选择角色</h4>
+                        <div class="space-y-3">
+                            <div v-for="role in roles" :key="role.id"
+                                 @click="currentRole = role.id"
+                                 :class="currentRole === role.id ? 'role-card-active' : ''"
+                                 class="p-3 rounded-lg border border-gray-200 cursor-pointer transition flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full" :class="role.color"></div>
+                                <div>
+                                    <div class="text-sm font-medium">{{ role.name }}</div>
+                                    <div class="text-xs text-gray-400">{{ role.scene }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                        <h4 class="font-medium text-sm mb-4">语音设置</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-2">语速</label>
+                                <input type="range" v-model="speechRate" min="0.7" max="1.3" step="0.1"
+                                       class="w-full accent-purple-600">
+                                <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                    <span>慢</span><span>{{ speechRate }}x</span><span>快</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-500 block mb-2">音色</label>
+                                <select v-model="voiceType" class="w-full p-2 border border-gray-200 rounded text-sm">
+                                    <option value="female">亲和女声</option>
+                                    <option value="male">沉稳男声</option>
+                                    <option value="young">青年女声</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                        <h4 class="font-medium text-sm mb-3">能力说明</h4>
+                        <div class="space-y-2 text-xs text-gray-500">
+                            <div class="flex items-center gap-2">
+                                <span class="text-purple-500">✓</span>
+                                <span>原生对接优高智能知识库</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-purple-500">✓</span>
+                                <span>实时语音驱动唇形同步</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-purple-500">✓</span>
+                                <span>可输出参数流嵌入XR空间</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 中间数字人展示 -->
+                <div class="col-span-2">
+                    <div class="digital-human-container" :class="{ 'speaking': isSpeaking }">
+                        <div class="human-figure" :class="`role-${currentRole}`">
+                            <div class="human-head">
+                                <div class="human-eye left"></div>
+                                <div class="human-eye right"></div>
+                                <div class="human-mouth"></div>
+                            </div>
+                            <div class="human-body"></div>
+                        </div>
+                        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs text-gray-600">
+                            {{ isSpeaking ? '正在讲话...' : '待机中' }}
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <div class="font-medium">{{ currentRoleName }}</div>
+                        <div class="text-xs text-gray-400 mt-1">{{ currentRoleDesc }}</div>
+                    </div>
+                </div>
+
+                <!-- 右侧对话面板 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col" style="height: 520px;">
+                    <div class="p-4 border-b border-gray-100">
+                        <div class="text-sm font-medium">对话窗口</div>
+                        <div class="text-xs text-gray-400 mt-0.5">回答基于企业知识库生成</div>
+                    </div>
+                    
+                    <div class="flex-1 p-4 overflow-y-auto space-y-3">
+                        <div class="msg-bubble msg-ai">
+                            你好！我是{{ currentRoleName }}，有什么可以帮您？
+                        </div>
+                        <div v-for="msg in chatMessages" :key="msg.id" class="fade-in">
+                            <div v-if="msg.role === 'user'" class="msg-bubble msg-user">
+                                {{ msg.content }}
+                            </div>
+                            <div v-else class="msg-bubble msg-ai">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 border-t border-gray-100">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <button v-for="q in quickQuestions" :key="q"
+                                    @click="askQuestion(q)"
+                                    class="text-xs px-2 py-1 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 transition">
+                                {{ q }}
+                            </button>
+                        </div>
+                        <div class="flex gap-2">
+                            <input v-model="chatInput" @keyup.enter="sendQuestion"
+                                   type="text" placeholder="输入问题..."
+                                   class="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-purple-400">
+                            <button @click="sendQuestion"
+                                    class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition">
+                                发送
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 核心能力 -->
+    <section id="ability" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">四大核心能力</h2>
+                <p class="text-gray-500">不止是数字人形象，更是带业务心智的交互实体</p>
+            </div>
+
+            <div class="grid grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mb-4">👤</div>
+                    <h3 class="font-bold text-lg mb-2">形象定制</h3>
+                    <p class="text-sm text-gray-500">支持形象、服饰、发型、动作自定义，内置多行业角色模板，快速生成专属数字人IP。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mb-4">🎙️</div>
+                    <h3 class="font-bold text-lg mb-2">语音交互</h3>
+                    <p class="text-sm text-gray-500">多语种多音色语音合成，实时唇形表情同步，支持打断、多轮对话、情感识别。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mb-4">🧠</div>
+                    <h3 class="font-bold text-lg mb-2">业务心智</h3>
+                    <p class="text-sm text-gray-500">原生对接优高智能知识库，懂业务、能问答、可执行任务，不是只会念脚本的数字人。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl mb-4">🌐</div>
+                    <h3 class="font-bold text-lg mb-2">多端部署</h3>
+                    <p class="text-sm text-gray-500">支持网页、大屏、APP、VR/AR多终端，可独立运行，也可参数化嵌入XR空间。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术架构 -->
+    <section id="architecture" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">技术架构</h2>
+                <p class="text-gray-500">分层驱动架构，原生打通优高产品体系</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-100">
+                        <div class="text-sm font-medium text-purple-700 mb-2">应用表现层</div>
+                        <div class="grid grid-cols-4 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">网页/H5</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">大屏终端</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">移动APP</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">XR空间嵌入</div>
+                        </div>
+                    </div>
+                    <div class="text-center text-gray-300 text-sm">↓ 视频流 / 参数流 双输出模式</div>
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                        <div class="text-sm font-medium text-gray-600 mb-2">数字人驱动层</div>
+                        <div class="grid grid-cols-4 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">形象渲染引擎</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">动作表情驱动</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">唇形同步算法</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">语音合成引擎</div>
+                        </div>
+                    </div>
+                    <div class="text-center text-gray-300 text-sm">↓ 原生对接优高智能底座</div>
+                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                        <div class="text-sm font-medium text-gray-600 mb-2">业务心智层</div>
+                        <div class="grid grid-cols-3 gap-4 text-center text-sm">
+                            <div class="bg-white rounded-lg p-3 shadow-sm">RAG知识库</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">对话管理</div>
+                            <div class="bg-white rounded-lg p-3 shadow-sm">Agent任务执行</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-5 bg-purple-50 rounded-xl border border-purple-100">
+                    <h4 class="font-medium text-purple-700 mb-3 text-sm">▸ 与优高体系协同</h4>
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <div class="font-medium mb-1">对接优高智能</div>
+                            <p class="text-gray-500 text-xs">复用知识库与Agent能力，数字人自带业务大脑，无需重复配置知识</p>
+                        </div>
+                        <div>
+                            <div class="font-medium mb-1">嵌入优高智境</div>
+                            <p class="text-gray-500 text-xs">参数化驱动输出，直接将数字人角色置入XR三维空间，形象人格一致</p>
+                        </div>
+                        <div>
+                            <div class="font-medium mb-1">统一账号体系</div>
+                            <p class="text-gray-500 text-xs">一套权限、一套数据、一套日志，全产品打通，统一管理</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 应用场景 -->
+    <section id="scenes" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">典型应用场景</h2>
+                <p class="text-gray-500">覆盖多行业拟人化交互需求</p>
+            </div>
+
+            <div class="grid grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mb-4">🏛️</div>
+                    <h3 class="font-bold text-lg mb-2">展厅讲解员</h3>
+                    <p class="text-sm text-gray-500 mb-4">政企展馆、企业展厅7×24小时智能讲解，展品问答，引导参观路线。</p>
+                    <div class="text-xs text-purple-600">对接展品知识库 →</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-2xl mb-4">💬</div>
+                    <h3 class="font-bold text-lg mb-2">智能客服</h3>
+                    <p class="text-sm text-gray-500 mb-4">政务大厅、企业客服虚拟坐席，业务咨询办理，降低人工成本。</p>
+                    <div class="text-xs text-purple-600">对接业务系统 →</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl mb-4">🏞️</div>
+                    <h3 class="font-bold text-lg mb-2">文旅导览</h3>
+                    <p class="text-sm text-gray-500 mb-4">景区、博物馆历史人物数字人导览，讲解文化背景，互动问答。</p>
+                    <div class="text-xs text-purple-600">对接文化知识库 →</div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl mb-4">👩‍💼</div>
+                    <h3 class="font-bold text-lg mb-2">虚拟员工</h3>
+                    <p class="text-sm text-gray-500 mb-4">企业内部培训、入职引导、政策答疑，打造专属数字员工团队。</p>
+                    <div class="text-xs text-purple-600">对接企业制度库 →</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 产品优势 -->
+    <section id="advantage" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-3">为什么选择优高智人</h2>
+                <p class="text-gray-500">区别于传统数字人产品，从"有形象"到"有心智"</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">原生带业务心智</h3>
+                    <p class="text-sm text-gray-500">传统数字人只有形象和脚本，优高智人原生对接优高智能知识库，懂业务、能问答、可执行任务，数字人真正能干活。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">可嵌入XR空间</h3>
+                    <p class="text-sm text-gray-500">支持参数化驱动输出，不只是视频流，可直接把数字人角色置入优高智境XR三维空间，实现沉浸式交互。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">一套角色多端复用</h3>
+                    <p class="text-sm text-gray-500">同一个数字人形象、人格、知识库，可在网页、大屏、APP、XR空间保持一致体验，一次配置多处使用。</p>
+                </div>
+                <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-lg mb-3">低部署低成本</h3>
+                    <p class="text-sm text-gray-500">Web轻量化方案无需插件，浏览器即开即用；云端渲染+端侧渲染混合架构，大幅降低算力成本。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 底部CTA -->
+    <section class="py-20 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-4">打造您的专属数字人团队</h2>
+            <p class="opacity-80 mb-8">获取完整产品方案，定制行业角色，探索数字人落地场景</p>
+            <div class="flex gap-4 justify-center">
+                <button class="bg-white text-purple-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition">
+                    预约演示
+                </button>
+                <button class="border border-white/30 px-8 py-3 rounded-lg font-medium hover:bg-white/10 transition">
+                    下载产品白皮书
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-gray-400 py-12 text-sm">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="text-white font-bold text-lg mb-4">优高智人</div>
+                    <p class="text-xs opacity-60">人格化数字交互平台，让AI交互更有温度</p>
+                </div>
+                <div>
+                    <div class="text-white mb-4">产品矩阵</div>
+                    <div class="space-y-2 text-xs">
+                        <div>优高智能</div>
+                        <div>优高智人</div>
+                        <div>优高智境</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-white mb-4">解决方案</div>
+                    <div class="space-y-2 text-xs">
+                        <div>智能展厅</div>
+                        <div>数字客服</div>
+                        <div>文旅导览</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-white mb-4">联系我们</div>
+                    <div class="space-y-2 text-xs">
+                        <div>商务合作：business@yougao.com</div>
+                        <div>技术支持：support@yougao.com</div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-6 text-xs opacity-60 text-center">
+                © 2026 优高智能 版权所有
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+        setup() {
+            // 角色配置
+            const currentRole = ref('business');
+            const speechRate = ref(1.0);
+            const voiceType = ref('female');
+            const isSpeaking = ref(false);
+            const chatInput = ref('');
+            const chatMessages = ref([]);
+
+            const roles = [
+                { id: 'business', name: '商务讲解员', scene: '企业展厅', color: 'bg-blue-500' },
+                { id: 'tech', name: '技术专家', scene: '方案咨询', color: 'bg-cyan-500' },
+                { id: 'guide', name: '虚拟导游', scene: '文旅导览', color: 'bg-green-500' }
+            ];
+
+            const currentRoleName = computed(() => {
+                return roles.find(r => r.id === currentRole.value)?.name || '商务讲解员';
+            });
+
+            const currentRoleDesc = computed(() => {
+                const map = {
+                    business: '擅长企业产品与方案讲解',
+                    tech: '擅长技术问题与架构咨询',
+                    guide: '擅长文旅景点与文化介绍'
+                };
+                return map[currentRole.value] || '';
+            });
+
+            const quickQuestions = [
+                '优高智人有什么能力？',
+                '可以应用在哪些场景？',
+                '和其他数字人有什么区别？'
+            ];
+
+            // 语音合成
+            const speakText = (text) => {
+                if (!('speechSynthesis' in window)) {
+                    isSpeaking.value = true;
+                    setTimeout(() => { isSpeaking.value = false; }, 2000);
+                    return;
+                }
+
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = parseFloat(speechRate.value);
+                
+                const voices = speechSynthesis.getVoices();
+                const zhVoice = voices.find(v => v.lang.includes('zh'));
+                if (zhVoice) utterance.voice = zhVoice;
+
+                utterance.onstart = () => { isSpeaking.value = true; };
+                utterance.onend = () => { isSpeaking.value = false; };
+                utterance.onerror = () => { isSpeaking.value = false; };
+
+                speechSynthesis.speak(utterance);
+            };
+
+            // 发送问题
+            const askQuestion = (q) => {
+                chatInput.value = q;
+                sendQuestion();
+            };
+
+            const sendQuestion = async () => {
+                if (!chatInput.value.trim()) return;
+                const question = chatInput.value;
+                chatMessages.value.push({ id: Date.now(), role: 'user', content: question });
+                chatInput.value = '';
+
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question, scene: currentRole.value })
+                    });
+                    const data = await res.json();
+                    
+                    chatMessages.value.push({
+                        id: Date.now() + 1,
+                        role: 'ai',
+                        content: data.answer
+                    });
+                    
+                    // 数字人语音播报
+                    speakText(data.answer);
+                    
+                } catch (e) {
+                    const fallback = '演示模式下，我可以为您介绍优高智人的核心能力与应用场景。';
+                    chatMessages.value.push({
+                        id: Date.now() + 1,
+                        role: 'ai',
+                        content: fallback
+                    });
+                    speakText(fallback);
+                }
+            };
+
+            return {
+                currentRole,
+                roles,
+                currentRoleName,
+                currentRoleDesc,
+                speechRate,
+                voiceType,
+                isSpeaking,
+                chatInput,
+                chatMessages,
+                quickQuestions,
+                askQuestion,
+                sendQuestion
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
